@@ -4,9 +4,12 @@ import { ThemeProvider } from "@/contexts/theme-context";
 
 import Layout from "@/routes/layout";
 import DashboardPage from "@/pages/dashboard";
-import BlogsList from "@/pages/blogslist";
+import Blogs from "@/pages/blogslist";
 import Login from "@/pages/login";
+import WatchSection from "./pages/watchsection";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import Events from "./pages/eventsection";
+import AudioFile from "./pages/audiofiles";
 
 function App() {
     const router = createBrowserRouter([
@@ -35,11 +38,19 @@ function App() {
                 },
                 {
                     path: "blogs",
-                    element: <BlogsList />,
+                    element: <Blogs />,
                 },
                 {
-                    path: "reports",
-                    element: <h1 className="title">Reports</h1>,
+                    path: "watchsection",
+                    element: <WatchSection />,
+                },
+                {
+                    path: "eventsection",
+                    element: <Events />,
+                },
+                {
+                    path: "audiofiles",
+                    element: <AudioFile />,
                 },
                 {
                     path: "customers",

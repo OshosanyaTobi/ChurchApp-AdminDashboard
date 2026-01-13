@@ -18,9 +18,19 @@ export const navbarLinks = [
                 path: "/blogs",
             },
             {
-                label: "Reports",
+                label: "WatchSection",
                 icon: NotepadText,
-                path: "/reports",
+                path: "/watchsection",
+            },
+            {
+                label: "EventSection",
+                icon: NotepadText,
+                path: "/eventsection",
+            },
+            {
+                label: "AudioSection",
+                icon: NotepadText,
+                path: "/audiofiles",
             },
         ],
     },
