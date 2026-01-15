@@ -1,21 +1,34 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import DashboardPage from "@/pages/dashboard";
+import { useStateContext } from "../contexts/StateContext";
 
-export default function Login() {
+const Login = () => {
+  const { login, token } = useStateContext();
   const navigate = useNavigate();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  const handleSubmit = (e) => {
+  // ✅ Redirect ONLY when token changes
+  useEffect(() => {
+    if (token) {
+      navigate("/");
+    }
+  }, [token, navigate]);
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setError("");
+    setLoading(true);
 
-    // TEMPORARY: simulate successful login
-    if (email && password) {
-        localStorage.setItem("auth_token", "fake-token");
-        
-        navigate("/", { replace: true });
+    try {
+      await login({ email, password });
+    } catch (err) {
+      setError(err.response?.data?.message || "Login failed");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -23,6 +36,8 @@ export default function Login() {
     <div style={styles.container}>
       <form onSubmit={handleSubmit} style={styles.form}>
         <h2>Admin Login</h2>
+
+        {error && <p style={styles.error}>{error}</p>}
 
         <input
           type="email"
@@ -42,13 +57,13 @@ export default function Login() {
           style={styles.input}
         />
 
-        <button type="submit" style={styles.button}>
-          Login
+        <button type="submit" style={styles.button} disabled={loading}>
+          {loading ? "Logging in..." : "Login"}
         </button>
       </form>
     </div>
   );
-}
+};
 
 const styles = {
   container: {
@@ -73,4 +88,10 @@ const styles = {
     padding: "10px",
     cursor: "pointer",
   },
+  error: {
+    color: "red",
+    marginBottom: "10px",
+  },
 };
+
+export default Login;

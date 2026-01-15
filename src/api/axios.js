@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const API = axios.create({
-  baseURL: 'https://church-api.altoservices.net/api/v1',
+  baseURL: 'http://church-api.altoservices.net/api/v1',
 });
 
 // Attach token
@@ -54,6 +54,12 @@ API.getAudio = () => API.get('/audio');
 API.createAudio = (data) => API.post('/audio/upload', data);
 API.updateAudio = (id, data) => API.put(`/audio/${id}`, data);
 API.deleteAudio = (id) => API.delete(`/audio/${id}`);
+
+// WATCH SECTION
+API.getWatchSection = () => API.get('/watch-sections');
+API.createWatchSection = (data) => API.post('/watch-sections', data);
+API.updateWatchSection = (id, data) => API.put(`/watch-sections/${id}`, data);
+API.deleteWatchSection = (id) => API.delete(`/watch-sections/${id}`);
 
 // Blogs
 API.getBlogs = () => API.get('/blogs');

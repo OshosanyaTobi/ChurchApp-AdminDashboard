@@ -35,46 +35,6 @@ export const navbarLinks = [
         ],
     },
     {
-        title: "Customers",
-        links: [
-            {
-                label: "Customers",
-                icon: Users,
-                path: "/customers",
-            },
-            {
-                label: "New customer",
-                icon: UserPlus,
-                path: "/new-customer",
-            },
-            {
-                label: "Verified customers",
-                icon: UserCheck,
-                path: "/verified-customers",
-            },
-        ],
-    },
-    {
-        title: "Products",
-        links: [
-            {
-                label: "Products",
-                icon: Package,
-                path: "/products",
-            },
-            {
-                label: "New product",
-                icon: PackagePlus,
-                path: "/new-product",
-            },
-            {
-                label: "Inventory",
-                icon: ShoppingBag,
-                path: "/inventory",
-            },
-        ],
-    },
-    {
         title: "Settings",
         links: [
             {
@@ -90,7 +50,7 @@ export const navbarLinks = [
             {
                 label: "Logout",
                 icon: Settings,
-                path: "/login",
+                path: "/logout",
             },
         ],
     },

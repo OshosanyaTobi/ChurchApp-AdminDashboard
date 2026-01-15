@@ -8,31 +8,41 @@ const AudioFile = () => {
   const [audioFile, setAudioFile] = useState(null);
   const [loading, setLoading] = useState(false);
   const [audio, setAudio] = useState([]);
+  const [search, setSearch] = useState('');
+  const [page, setPage] = useState(1);
+
+  const perPage = 5;
+
+  // ================= UPLOAD AUDIO =================
   const uploadAudio = async () => {
     const result = await openUpload({
       apiKey: process.env.REACT_APP_BYTESCALE_KEY,
       maxFileCount: 1,
-      mimeTypes: ['audio/upload/*'],
+      mimeTypes: ['audio/upload*'],
     });
 
-    if (!result || result.length === 0) return;
+    if (!result || result.length === 0) return null;
 
-    const { fileUrl, filePath } = result[0];
-
-    console.log('Uploaded:', fileUrl, filePath);
+    return result[0]; // { fileUrl, filePath, etag }
   };
 
-  // ================= Load Sermons =================
+  // ================= LOAD AUDIO =================
   const loadAudio = async () => {
-    const res = await API.getAudio();
-    setAudio(res.data);
+    try {
+      const res = await API.getAudio();
+      const audioArray = Array.isArray(res.data?.data) ? res.data.data : [];
+      setAudio(audioArray);
+    } catch (err) {
+      console.error(err);
+      setAudio([]);
+    }
   };
 
   useEffect(() => {
     loadAudio();
   }, []);
 
-  // ================= Submit Sermon =================
+  // ================= SUBMIT AUDIO =================
   const submitAudio = async () => {
     if (!title || !audioFile) {
       alert('Title and audio are required');
@@ -42,7 +52,12 @@ const AudioFile = () => {
     try {
       setLoading(true);
 
-      const audioData = await uploadAudio(audioFile);
+      const audioData = await uploadAudio();
+
+      if (!audioData) {
+        alert('Upload failed');
+        return;
+      }
 
       await API.post('/audio/upload', {
         title,
@@ -53,28 +68,41 @@ const AudioFile = () => {
 
       setTitle('');
       setAudioFile(null);
-
       await loadAudio();
       alert('Audio published successfully');
     } catch (error) {
-      console.log(error.response?.data);
+      console.error(error.response?.data || error);
       alert('Upload failed');
     } finally {
       setLoading(false);
     }
   };
-  const deleteAudio = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this sermon?')) return;
 
-    await API.deleteAudio(id);
-    loadAudio();
+  // ================= DELETE AUDIO =================
+  const deleteAudio = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this audio?')) return;
+
+    try {
+      await API.deleteAudio(id);
+      loadAudio();
+    } catch (err) {
+      console.error(err);
+    }
   };
+
+  // ================= FILTER & PAGINATION =================
+  const filteredAudio = Array.isArray(audio)
+    ? audio.filter((a) => a.title.toLowerCase().includes(search.toLowerCase()))
+    : [];
+
+  const totalPages = Math.ceil(filteredAudio.length / perPage);
+  const paginatedAudio = filteredAudio.slice((page - 1) * perPage, page * perPage);
 
   return (
     <div className="m-2 md:m-10 mt-24 p-6 bg-white rounded-3xl">
       <Header category="Ministry" title="Audio Files" />
 
-      {/* Upload Form */}
+      {/* ===== UPLOAD FORM ===== */}
       <div className="space-y-4 mb-6">
         <input
           className="border p-2 rounded w-full"
@@ -83,11 +111,20 @@ const AudioFile = () => {
           onChange={(e) => setTitle(e.target.value)}
         />
 
-        <input
-          type="file"
-          accept="audio/*"
-          onChange={(e) => setAudioFile(e.target.files[0])}
-        />
+        <div className="flex items-center gap-4">
+          <input
+            type="file"
+            accept="audio/*"
+            onChange={(e) => setAudioFile(e.target.files[0])}
+          />
+
+          {/* ===== AUDIO FILE PREVIEW ===== */}
+          {audioFile && (
+            <span className="text-gray-700 text-sm">
+              Selected file: {audioFile.name}
+            </span>
+          )}
+        </div>
 
         <button
           type="button"
@@ -98,29 +135,64 @@ const AudioFile = () => {
         </button>
       </div>
 
-      {/* Sermon List */}
+      {/* ===== SEARCH ===== */}
+      <input
+        type="text"
+        placeholder="Search audio files..."
+        value={search}
+        onChange={(e) => {
+          setSearch(e.target.value);
+          setPage(1); // reset page when searching
+        }}
+        className="border p-2 w-full mb-4"
+      />
+
+      {/* ===== AUDIO LIST ===== */}
       <div className="space-y-4">
-        {audio.map((s) => (
-          <div key={s.id} className="border p-4 rounded">
-            <h3 className="font-bold text-lg">{s.title}</h3>
+        {paginatedAudio.length > 0 ? (
+          paginatedAudio.map((s) => (
+            <div key={s.id} className="border p-4 rounded">
+              <h3 className="font-bold text-lg">{s.title}</h3>
 
-            {s.audio_url && (
-            // eslint-disable-next-line jsx-a11y/media-has-caption
-            <audio controls className="mt-3 w-full">
-              <source src={s.audio_url} />
-            </audio>
-            )}
+              {s.audio_url && (
+                // eslint-disable-next-line jsx-a11y/media-has-caption
+                <audio controls className="mt-3 w-full">
+                  <source src={s.audio_url} />
+                </audio>
+              )}
 
-            <button
-              type="button"
-              onClick={() => deleteAudio(s.id)}
-              className="mt-3 text-red-600"
-            >
-              Delete
-            </button>
-          </div>
-        ))}
+              <button
+                type="button"
+                onClick={() => deleteAudio(s.id)}
+                className="mt-3 text-red-600"
+              >
+                Delete
+              </button>
+            </div>
+          ))
+        ) : (
+          <p>No audio files found.</p>
+        )}
       </div>
+
+      {/* ===== PAGINATION (PILLS) ===== */}
+      {totalPages > 1 && (
+        <div className="flex justify-center gap-2 mt-4">
+          {[...Array(totalPages)].map((_, i) => (
+            <button
+              key={i}
+              onClick={() => setPage(i + 1)}
+              className={`px-4 py-1 rounded-full font-semibold transition-colors ${
+                page === i + 1
+                  ? 'bg-indigo-600 text-white'
+                  : 'bg-gray-200 text-gray-800 hover:bg-gray-300'
+              }`}
+            >
+              {i + 1}
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 };

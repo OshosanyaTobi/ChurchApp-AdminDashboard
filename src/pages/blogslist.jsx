@@ -11,11 +11,7 @@ const styles = {
     margin: 'auto',
     fontFamily: 'Arial, sans-serif',
   },
-
-  header: {
-    marginBottom: '20px',
-  },
-
+  header: { marginBottom: '20px' },
   form: {
     background: '#ffffff',
     padding: '20px',
@@ -23,7 +19,6 @@ const styles = {
     marginBottom: '30px',
     boxShadow: '0 10px 25px rgba(0,0,0,0.05)',
   },
-
   input: {
     width: '100%',
     padding: '10px',
@@ -31,7 +26,6 @@ const styles = {
     borderRadius: '6px',
     border: '1px solid #d1d5db',
   },
-
   search: {
     width: '100%',
     padding: '10px',
@@ -39,7 +33,6 @@ const styles = {
     borderRadius: '6px',
     border: '1px solid #d1d5db',
   },
-
   primaryBtn: {
     backgroundColor: '#2563eb',
     color: '#ffffff',
@@ -49,7 +42,6 @@ const styles = {
     cursor: 'pointer',
     fontWeight: '600',
   },
-
   secondaryBtn: {
     backgroundColor: '#e5e7eb',
     color: '#111827',
@@ -59,7 +51,6 @@ const styles = {
     cursor: 'pointer',
     marginLeft: '10px',
   },
-
   dangerBtn: {
     backgroundColor: '#dc2626',
     color: '#ffffff',
@@ -69,7 +60,6 @@ const styles = {
     cursor: 'pointer',
     marginLeft: '10px',
   },
-
   outlineBtn: {
     backgroundColor: 'transparent',
     border: '1px solid #2563eb',
@@ -78,7 +68,6 @@ const styles = {
     borderRadius: '6px',
     cursor: 'pointer',
   },
-
   card: {
     background: '#ffffff',
     padding: '20px',
@@ -86,7 +75,6 @@ const styles = {
     marginBottom: '20px',
     boxShadow: '0 10px 25px rgba(0,0,0,0.05)',
   },
-
   image: {
     width: '100%',
     maxHeight: '300px',
@@ -94,40 +82,20 @@ const styles = {
     borderRadius: '8px',
     marginBottom: '10px',
   },
-
   meta: {
     color: '#6b7280',
     fontSize: '14px',
     marginBottom: '10px',
   },
-
-  actions: {
-    marginTop: '15px',
-  },
-
-  pagination: {
-    display: 'flex',
-    justifyContent: 'center',
-    gap: '10px',
-    marginTop: '20px',
-  },
-
-  pageBtn: {
-    padding: '6px 12px',
-    borderRadius: '6px',
-    border: 'none',
-    cursor: 'pointer',
-  },
+  actions: { marginTop: '15px' },
+  pagination: { display: 'flex', justifyContent: 'center', gap: '10px', marginTop: '20px' },
+  pageBtn: { padding: '6px 12px', borderRadius: '6px', border: 'none', cursor: 'pointer' },
 };
 
 /* ================= COMPONENT ================= */
 const Blogs = () => {
   const [blogs, setBlogs] = useState([]);
-  const [form, setForm] = useState({
-    title: '',
-    body: '',
-    image: '',
-  });
+  const [form, setForm] = useState({ title: '', body: '', image: '' });
   const [image, setImage] = useState(null);
   const [editingId, setEditingId] = useState(null);
   const [search, setSearch] = useState('');
@@ -139,9 +107,12 @@ const Blogs = () => {
   const fetchBlogs = async () => {
     try {
       const res = await API.getBlogs();
-      setBlogs(res.data);
+      // Ensure blogs is always an array
+      const blogArray = Array.isArray(res.data?.data) ? res.data.data : [];
+      setBlogs(blogArray);
     } catch (err) {
       console.error(err);
+      setBlogs([]); // fallback
     }
   };
 
@@ -150,13 +121,9 @@ const Blogs = () => {
   }, []);
 
   /* ===== HANDLERS ===== */
-  const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
+  const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
-  const handleImageChange = (e) => {
-    setImage(e.target.files[0]);
-  };
+  const handleImageChange = (e) => setImage(e.target.files[0]);
 
   const resetForm = () => {
     setForm({ title: '', body: '', image: '' });
@@ -170,8 +137,9 @@ const Blogs = () => {
     const data = new FormData();
     data.append('title', form.title);
     data.append('body', form.body);
-    data.append('image', form.image);
+    // Only append if new file selected
     if (image) data.append('image', image);
+    else data.append('image', form.image); // fallback to current value
 
     try {
       if (editingId) {
@@ -188,9 +156,9 @@ const Blogs = () => {
 
   const handleEdit = (blog) => {
     setForm({
-      title: blog.title,
-      author: blog.body,
-      content: blog.image,
+      title: blog.title || '',
+      body: blog.body || '',
+      image: blog.image || '',
     });
     setEditingId(blog.id);
   };
@@ -206,13 +174,12 @@ const Blogs = () => {
   };
 
   /* ===== FILTER & PAGINATION ===== */
-  const filteredBlogs = blogs.filter((b) => b.title.toLowerCase().includes(search.toLowerCase()));
+  const filteredBlogs = Array.isArray(blogs)
+    ? blogs.filter((b) => b.title.toLowerCase().includes(search.toLowerCase()))
+    : [];
 
   const totalPages = Math.ceil(filteredBlogs.length / perPage);
-  const paginatedBlogs = filteredBlogs.slice(
-    (page - 1) * perPage,
-    page * perPage,
-  );
+  const paginatedBlogs = filteredBlogs.slice((page - 1) * perPage, page * perPage);
 
   return (
     <div style={styles.container}>
@@ -239,9 +206,10 @@ const Blogs = () => {
           style={styles.input}
         />
 
+        {/* Use ReactQuill only for rich text */}
         <ReactQuill
-          value={form.image}
-          onChange={(value) => setForm({ ...form, image: value })}
+          value={form.body}
+          onChange={(value) => setForm({ ...form, body: value })}
           style={{ marginBottom: '15px' }}
         />
 
@@ -251,13 +219,8 @@ const Blogs = () => {
           <button type="submit" style={styles.primaryBtn}>
             {editingId ? 'Update Blog' : 'Create Blog'}
           </button>
-
           {editingId && (
-            <button
-              type="button"
-              onClick={resetForm}
-              style={styles.secondaryBtn}
-            >
+            <button type="button" onClick={resetForm} style={styles.secondaryBtn}>
               Cancel
             </button>
           )}
@@ -277,35 +240,21 @@ const Blogs = () => {
         <div key={blog.id} style={styles.card}>
           <h2>{blog.title}</h2>
 
-          {blog.image && (
-            <img
-              src={blog.image}
-              alt={blog.title}
-              style={styles.image}
-            />
-          )}
+          {blog.image && <img src={blog.image} alt={blog.title} style={styles.image} />}
 
           <p style={styles.meta}>
-            {blog.body} • {blog.createdAt}
+            {/* Use safe fallbacks */}
+            {blog.body ? blog.body.replace(/<[^>]+>/g, '').slice(0, 100) + '...' : ''} •{' '}
+            {blog.createdAt || ''}
           </p>
 
-          <div
-            dangerouslySetInnerHTML={{
-              __html: blog.image,
-            }}
-          />
+          <div dangerouslySetInnerHTML={{ __html: blog.body }} />
 
           <div style={styles.actions}>
-            <button
-              onClick={() => handleEdit(blog)}
-              style={styles.outlineBtn}
-            >
+            <button onClick={() => handleEdit(blog)} style={styles.outlineBtn}>
               Edit
             </button>
-            <button
-              onClick={() => handleDelete(blog.id)}
-              style={styles.dangerBtn}
-            >
+            <button onClick={() => handleDelete(blog.id)} style={styles.dangerBtn}>
               Delete
             </button>
           </div>
@@ -320,8 +269,7 @@ const Blogs = () => {
             onClick={() => setPage(i + 1)}
             style={{
               ...styles.pageBtn,
-              background:
-                                page === i + 1 ? '#2563eb' : '#e5e7eb',
+              background: page === i + 1 ? '#2563eb' : '#e5e7eb',
               color: page === i + 1 ? '#fff' : '#000',
             }}
           >

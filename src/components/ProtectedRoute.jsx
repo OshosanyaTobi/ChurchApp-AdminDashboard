@@ -1,13 +1,14 @@
 import { Navigate } from "react-router-dom";
+import { useStateContext } from "@/contexts/StateContext";
 
 const ProtectedRoute = ({ children }) => {
-    const token = localStorage.getItem("auth_token");
+  const { token } = useStateContext();
 
-    if (!token) {
-        return <Navigate to="/login" replace />;
-    }
+  if (!token) {
+    return <Navigate to="/login" replace />;
+  }
 
-    return children;
+  return children;
 };
 
 export default ProtectedRoute;
