@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const API = axios.create({
-  baseURL: 'http://church-api.altoservices.net/api/v1',
+  baseURL: 'https://church-api.altoservices.net/api/v1',
 });
 
 // Attach token
