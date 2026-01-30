@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_URL = "http://church-api.altoservices.net/api/v1";
+const API_URL = "https://tobi.altoservices.org/api/v1";
 
 export async function login(email, password) {
   try {

@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const API = axios.create({
-  baseURL: 'https://church-api.altoservices.net/api/v1',
+  baseURL: 'https://tobi.altoservices.org/api/v1',
 });
 
 // Attach token
@@ -69,5 +69,20 @@ API.deleteBlog = (id) => API.delete(`/blogs/${id}`);
 
 // RECORDS
 API.getRecords = () => API.get('/records');
+
+// ASSIGNMENTS
+API.getAssignments = () => API.get('/assignments');
+API.createAssignment = (data) => API.post('/assignments', data);
+API.updateAssignment = (id, data) => API.put(`/assignments/${id}`, data);
+API.deleteAssignment = (id) => API.delete(`/assignments/${id}`);
+
+// VOLUNTEERS (Admin use)
+API.getVolunteers = () => API.get('/volunteers');
+
+// SCHEDULES
+API.getSchedules = () => API.get('/schedules');          // Admin: view all
+API.createSchedule = (data) => API.post('/schedules', data); // Admin: create
+API.getMySchedule = () => API.get('/schedules/my');      // Volunteer: my schedule
+
 
 export default API;

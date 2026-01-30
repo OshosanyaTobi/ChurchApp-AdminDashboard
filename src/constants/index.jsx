@@ -32,6 +32,16 @@ export const navbarLinks = [
                 icon: NotepadText,
                 path: "/audiofiles",
             },
+            {
+                label: "Roles",
+                icon: ChartColumn,
+                path: "/roles",
+            },
+            {
+                label: "Schedules",
+                icon: ChartColumn,
+                path: "/schedules",
+            },
         ],
     },
     {

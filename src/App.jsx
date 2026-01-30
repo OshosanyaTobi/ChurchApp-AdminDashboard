@@ -1,7 +1,7 @@
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
-
 import { ThemeProvider } from "@/contexts/ThemeProvider";
 import { StateProvider } from "@/contexts/StateContext";
+import { Toaster } from "react-hot-toast"; // ✅ import
 
 import Layout from "@/routes/layout";
 import DashboardPage from "@/pages/dashboard";
@@ -12,6 +12,8 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import Events from "@/pages/eventsection";
 import AudioFile from "@/pages/audiofiles";
 import Logout from "./pages/Logout";
+import AdminRoleCreate from "./pages/adminrolecreate";
+import AdminCreateSchedule from "./pages/admincreateschedule";
 
 function App() {
   const router = createBrowserRouter([
@@ -36,6 +38,8 @@ function App() {
         { path: "watchsection", element: <WatchSection /> },
         { path: "eventsection", element: <Events /> },
         { path: "audiofiles", element: <AudioFile /> },
+        { path: "roles", element: <AdminRoleCreate /> },
+        { path: "schedules", element: <AdminCreateSchedule /> },
         { path: "settings", element: <h1 className="title">Settings</h1> },
         { path: "logout", element: <Logout /> },
       ],
@@ -46,6 +50,7 @@ function App() {
     <ThemeProvider storageKey="theme">
       <StateProvider>
         <RouterProvider router={router} />
+        <Toaster /> {/* ✅ Add Toaster here so all toast notifications work */}
       </StateProvider>
     </ThemeProvider>
   );
