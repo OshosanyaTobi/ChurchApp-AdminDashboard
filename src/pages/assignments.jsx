@@ -26,6 +26,14 @@ const styles = {
     borderRadius: '6px',
     border: '1px solid #d1d5db',
   },
+  select: {
+    width: '100%',
+    padding: '10px',
+    marginBottom: '10px',
+    borderRadius: '6px',
+    border: '1px solid #d1d5db',
+    height: '45px',
+  },
   search: {
     width: '100%',
     padding: '10px',
@@ -75,13 +83,6 @@ const styles = {
     marginBottom: '20px',
     boxShadow: '0 10px 25px rgba(0,0,0,0.05)',
   },
-  image: {
-    width: '100%',
-    maxHeight: '300px',
-    objectFit: 'cover',
-    borderRadius: '8px',
-    marginBottom: '10px',
-  },
   meta: {
     color: '#6b7280',
     fontSize: '14px',
@@ -103,10 +104,15 @@ const styles = {
 };
 
 /* ================= COMPONENT ================= */
-const Blogs = () => {
-  const [blogs, setBlogs] = useState([]);
-  const [form, setForm] = useState({ title: '', body: '', image: '' });
-  const [image, setImage] = useState(null);
+const Assignments = () => {
+  const [assignments, setAssignments] = useState([]);
+  const [form, setForm] = useState({
+    title: '',
+    description: '',
+    assignment_date: '',
+    volunteer_ids: [],
+  });
+  const [volunteers, setVolunteers] = useState([]);
   const [editingId, setEditingId] = useState(null);
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
@@ -114,50 +120,64 @@ const Blogs = () => {
 
   const perPage = 5;
 
-  /* ===== FETCH BLOGS ===== */
-  const fetchBlogs = async () => {
+  /* ===== FETCH ASSIGNMENTS ===== */
+  const fetchAssignments = async () => {
     try {
-      const res = await API.getBlogs();
-      setBlogs(Array.isArray(res.data?.data) ? res.data.data : []);
+      const res = await API.getAssignments();
+      setAssignments(Array.isArray(res.data?.data) ? res.data.data : []);
     } catch (err) {
       console.error(err);
-      setBlogs([]);
+      setAssignments([]);
+    }
+  };
+
+  /* ===== FETCH VOLUNTEERS ===== */
+  const fetchVolunteers = async () => {
+    try {
+      const res = await API.getVolunteers();
+      setVolunteers(Array.isArray(res.data?.data) ? res.data.data : []);
+    } catch (err) {
+      console.error(err);
+      setVolunteers([]);
     }
   };
 
   useEffect(() => {
-    fetchBlogs();
+    fetchAssignments();
+    fetchVolunteers();
   }, []);
 
   /* ===== HANDLERS ===== */
   const handleChange = (e) =>
     setForm({ ...form, [e.target.name]: e.target.value });
 
-  const handleImageChange = (e) => setImage(e.target.files[0]);
+  const handleMultiSelect = (e) => {
+    const selected = Array.from(
+      e.target.selectedOptions,
+      (option) => option.value
+    );
+    setForm({ ...form, volunteer_ids: selected });
+  };
 
   const resetForm = () => {
-    setForm({ title: '', body: '', image: '' });
-    setImage(null);
+    setForm({ title: '', description: '', assignment_date: '', volunteer_ids: [] });
     setEditingId(null);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
+    if (!form.title || !form.description || !form.assignment_date) return;
 
-    const data = new FormData();
-    data.append('title', form.title);
-    data.append('body', form.body);
-    if (image) data.append('image', image);
+    setLoading(true);
 
     try {
       if (editingId) {
-        await API.updateBlog(editingId, data);
+        await API.updateAssignment(editingId, form);
       } else {
-        await API.createBlog(data);
+        await API.createAssignment(form);
       }
       resetForm();
-      fetchBlogs();
+      fetchAssignments();
     } catch (err) {
       console.error(err);
     } finally {
@@ -165,47 +185,50 @@ const Blogs = () => {
     }
   };
 
-  const handleEdit = (blog) => {
+  const handleEdit = (assignment) => {
     setForm({
-      title: blog.title || '',
-      body: blog.body || '',
-      image: blog.image || '',
+      title: assignment.title || '',
+      description: assignment.description || '',
+      assignment_date: assignment.assignment_date || '',
+      volunteer_ids: assignment.volunteers
+        ? assignment.volunteers.map((v) => String(v.id))
+        : [],
     });
-    setEditingId(blog.id);
+    setEditingId(assignment.id);
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Delete this blog?')) return;
+    if (!window.confirm('Delete this assignment?')) return;
     try {
-      await API.deleteBlog(id);
-      fetchBlogs();
+      await API.deleteAssignment(id);
+      fetchAssignments();
     } catch (err) {
       console.error(err);
     }
   };
 
   /* ===== FILTER & PAGINATION ===== */
-  const filteredBlogs = blogs.filter((b) =>
-    b.title.toLowerCase().includes(search.toLowerCase())
+  const filteredAssignments = assignments.filter((a) =>
+    a.title.toLowerCase().includes(search.toLowerCase())
   );
 
-  const totalPages = Math.ceil(filteredBlogs.length / perPage);
-  const paginatedBlogs = filteredBlogs.slice(
+  const totalPages = Math.ceil(filteredAssignments.length / perPage);
+  const paginatedAssignments = filteredAssignments.slice(
     (page - 1) * perPage,
     page * perPage
   );
 
   return (
     <div style={styles.container}>
-      <h1 style={styles.header}>📝 Blog Management</h1>
+      <h1 style={styles.header}>📋 Assignment Management</h1>
 
       {/* ===== FORM ===== */}
       <form onSubmit={handleSubmit} style={styles.form}>
-        <h3>{editingId ? 'Edit Blog Post' : 'Create Blog Post'}</h3>
+        <h3>{editingId ? 'Edit Assignment' : 'Create Assignment'}</h3>
 
         <input
           name="title"
-          placeholder="Blog title"
+          placeholder="Assignment title"
           value={form.title}
           onChange={handleChange}
           required
@@ -213,12 +236,32 @@ const Blogs = () => {
         />
 
         <ReactQuill
-          value={form.body}
-          onChange={(value) => setForm({ ...form, body: value })}
+          value={form.description}
+          onChange={(value) => setForm({ ...form, description: value })}
           style={{ marginBottom: '15px' }}
         />
 
-        <input type="file" onChange={handleImageChange} />
+        <input
+          type="date"
+          name="assignment_date"
+          value={form.assignment_date}
+          onChange={handleChange}
+          required
+          style={styles.input}
+        />
+
+        <select
+          multiple
+          value={form.volunteer_ids}
+          onChange={handleMultiSelect}
+          style={styles.select}
+        >
+          {volunteers.map((v) => (
+            <option key={v.id} value={v.id}>
+              {v.name} ({v.email})
+            </option>
+          ))}
+        </select>
 
         <div style={{ marginTop: '15px' }}>
           <button
@@ -235,8 +278,8 @@ const Blogs = () => {
                 ? 'Updating...'
                 : 'Creating...'
               : editingId
-              ? 'Update Blog'
-              : 'Create Blog'}
+              ? 'Update Assignment'
+              : 'Create Assignment'}
           </button>
 
           {editingId && (
@@ -253,40 +296,38 @@ const Blogs = () => {
 
       {/* ===== SEARCH ===== */}
       <input
-        placeholder="Search blog posts..."
+        placeholder="Search assignments..."
         value={search}
         onChange={(e) => setSearch(e.target.value)}
         style={styles.search}
       />
 
-      {/* ===== BLOG LIST ===== */}
-      {paginatedBlogs.map((blog) => (
-        <div key={blog.id} style={styles.card}>
-          <h2>{blog.title}</h2>
-
-          {/* ✅ FIXED IMAGE DISPLAY */}
-          {blog.image && (
-            <img
-              src={blog.image} // use the full URL from backend directly
-              alt={blog.title}
-              style={styles.image}
-            />
-          )}
+      {/* ===== ASSIGNMENT LIST ===== */}
+      {paginatedAssignments.map((assignment) => (
+        <div key={assignment.id} style={styles.card}>
+          <h2>{assignment.title}</h2>
 
           <p style={styles.meta}>
-            {blog.body
-              ? blog.body.replace(/<[^>]+>/g, '').slice(0, 100) + '...'
-              : ''}
+            {assignment.assignment_date}
           </p>
 
-          <div dangerouslySetInnerHTML={{ __html: blog.body }} />
+          <div dangerouslySetInnerHTML={{ __html: assignment.description }} />
+
+          {assignment.volunteers && assignment.volunteers.length > 0 && (
+            <p style={styles.meta}>
+              Assigned to: {assignment.volunteers.map((v) => v.name).join(', ')}
+            </p>
+          )}
 
           <div style={styles.actions}>
-            <button onClick={() => handleEdit(blog)} style={styles.outlineBtn}>
+            <button
+              onClick={() => handleEdit(assignment)}
+              style={styles.outlineBtn}
+            >
               Edit
             </button>
             <button
-              onClick={() => handleDelete(blog.id)}
+              onClick={() => handleDelete(assignment.id)}
               style={styles.dangerBtn}
             >
               Delete
@@ -315,4 +356,4 @@ const Blogs = () => {
   );
 };
 
-export default Blogs;
+export default Assignments;

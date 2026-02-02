@@ -4,6 +4,7 @@ import API from "../api/axios";
 export default function WatchSection() {
   const [watchsection, setWatchSection] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [creating, setCreating] = useState(false); // for "Creating..." animation
   const [form, setForm] = useState({
     title: "",
     description: "",
@@ -36,6 +37,10 @@ export default function WatchSection() {
 
   // ================= CREATE WATCH ITEM =================
   const handleCreate = async () => {
+    if (!form.title || !form.description) return;
+
+    setCreating(true);
+
     const formData = new FormData();
     formData.append("title", form.title);
     formData.append("description", form.description);
@@ -49,6 +54,8 @@ export default function WatchSection() {
       await loadWatchSection();
     } catch (err) {
       console.error(err);
+    } finally {
+      setCreating(false);
     }
   };
 
@@ -121,9 +128,38 @@ export default function WatchSection() {
         <button
           type="button"
           onClick={handleCreate}
-          className="bg-indigo-600 text-white px-4 py-2 rounded"
+          disabled={creating}
+          className={`bg-indigo-600 text-white px-4 py-2 rounded flex items-center justify-center gap-2 ${
+            creating ? "opacity-70 cursor-not-allowed" : ""
+          }`}
         >
-          Create Watch Item
+          {creating ? (
+            <>
+              <svg
+                className="animate-spin h-5 w-5 text-white"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                ></circle>
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8v8H4z"
+                ></path>
+              </svg>
+              Creating...
+            </>
+          ) : (
+            "Create Watch Item"
+          )}
         </button>
       </div>
 
@@ -163,7 +199,11 @@ export default function WatchSection() {
 
               {item.image && (
                 <img
-                  src={item.image}
+                  src={
+                    item.image.startsWith("http")
+                      ? item.image
+                      : `https://tobi.altoservices.org/${item.image}`
+                  }
                   alt={item.title}
                   className="mt-2 w-full max-w-sm rounded"
                 />
@@ -191,8 +231,8 @@ export default function WatchSection() {
               onClick={() => setPage(i + 1)}
               className={`px-4 py-1 rounded-full font-semibold transition-colors ${
                 page === i + 1
-                  ? 'bg-indigo-600 text-white'
-                  : 'bg-gray-200 text-gray-800 hover:bg-gray-300'
+                  ? "bg-indigo-600 text-white"
+                  : "bg-gray-200 text-gray-800 hover:bg-gray-300"
               }`}
             >
               {i + 1}

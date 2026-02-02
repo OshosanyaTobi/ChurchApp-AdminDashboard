@@ -14,6 +14,9 @@ import AudioFile from "@/pages/audiofiles";
 import Logout from "./pages/Logout";
 import AdminRoleCreate from "./pages/adminrolecreate";
 import AdminCreateSchedule from "./pages/admincreateschedule";
+import AdminAnnouncementsCreate from "./pages/admincreateannouncements";
+import AdminVolunteerReports from "./pages/adminvolunteerreports";
+import Assignments from "./pages/assignments";
 
 function App() {
   const router = createBrowserRouter([
@@ -34,12 +37,15 @@ function App() {
       children: [
         { index: true, element: <DashboardPage /> },
         { path: "dashboard", element: <DashboardPage /> },
+        { path: "announcements", element: <AdminAnnouncementsCreate /> },
         { path: "blogs", element: <Blogs /> },
         { path: "watchsection", element: <WatchSection /> },
         { path: "eventsection", element: <Events /> },
         { path: "audiofiles", element: <AudioFile /> },
         { path: "roles", element: <AdminRoleCreate /> },
+        { path: "assignments", element: <Assignments /> },
         { path: "schedules", element: <AdminCreateSchedule /> },
+        { path: "reports", element: <AdminVolunteerReports /> },
         { path: "settings", element: <h1 className="title">Settings</h1> },
         { path: "logout", element: <Logout /> },
       ],

@@ -11,6 +11,7 @@ function Events() {
   });
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
+  const [loading, setLoading] = useState(false); // ✅ loading state
 
   const perPage = 5;
 
@@ -19,7 +20,14 @@ function Events() {
     try {
       const res = await getEvents();
       const eventsArray = Array.isArray(res.data?.data) ? res.data.data : [];
-      setEvents(eventsArray);
+
+      // ✅ Ensure image URLs are absolute
+      const updatedEvents = eventsArray.map((e) => ({
+        ...e,
+        image: e.image || null,
+      }));
+
+      setEvents(updatedEvents);
     } catch (err) {
       console.error(err);
       setEvents([]);
@@ -32,6 +40,10 @@ function Events() {
 
   /* ===== CREATE EVENT ===== */
   const handleCreate = async () => {
+    if (!form.name || !form.venue || !form.event_date) return;
+
+    setLoading(true); // ✅ start animation
+
     try {
       const formData = new FormData();
       formData.append('name', form.name);
@@ -42,9 +54,11 @@ function Events() {
       await createEvent(formData);
 
       setForm({ name: '', venue: '', event_date: '', image: null });
-      load();
+      await load();
     } catch (err) {
       console.error(err);
+    } finally {
+      setLoading(false); // ✅ stop animation
     }
   };
 
@@ -53,7 +67,7 @@ function Events() {
     if (!window.confirm('Delete this event?')) return;
     try {
       await deleteEvent(id);
-      load();
+      await load();
     } catch (err) {
       console.error(err);
     }
@@ -116,8 +130,9 @@ function Events() {
           type="button"
           onClick={handleCreate}
           className="bg-indigo-600 text-white px-4 py-2 rounded"
+          disabled={loading} // ✅ disable while loading
         >
-          Create Event
+          {loading ? 'Creating...' : 'Create Event'} {/* ✅ animation */}
         </button>
       </div>
 
@@ -141,6 +156,15 @@ function Events() {
             <p className="text-sm">
               {e.event_date} | {e.venue}
             </p>
+
+            {/* ✅ DISPLAY IMAGE */}
+            {e.image && (
+              <img
+                src={e.image}
+                alt={e.name}
+                className="mt-2 w-full max-w-sm rounded object-cover"
+              />
+            )}
 
             <button
               type="button"

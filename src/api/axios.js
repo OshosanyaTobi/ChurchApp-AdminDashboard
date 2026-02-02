@@ -84,5 +84,14 @@ API.getSchedules = () => API.get('/schedules');          // Admin: view all
 API.createSchedule = (data) => API.post('/schedules', data); // Admin: create
 API.getMySchedule = () => API.get('/schedules/my');      // Volunteer: my schedule
 
+//ANNOUNCEMENTS & ALERTS
+API.createAnnouncement = (data) => API.post('/announcements', data); // Admin: create
+
+// VOLUNTEER REPORTS
+API.getReports = () => API.get('/reports/volunteers');          // Admin: view all
+
+//ASSIGNMENTS
+API.createAssignment = (data) => API.post('/assignments', data); // Admin: create
+
 
 export default API;

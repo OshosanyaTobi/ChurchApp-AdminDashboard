@@ -13,6 +13,11 @@ export const navbarLinks = [
                 path: "/",
             },
             {
+                label: "Announcements",
+                icon: ChartColumn,
+                path: "/announcements",
+            },
+            {
                 label: "Blogs",
                 icon: ChartColumn,
                 path: "/blogs",
@@ -38,9 +43,19 @@ export const navbarLinks = [
                 path: "/roles",
             },
             {
+                label: "Assignments",
+                icon: ChartColumn,
+                path: "/assignments",
+            },
+            {
                 label: "Schedules",
                 icon: ChartColumn,
                 path: "/schedules",
+            },
+            {
+                label: "Reports",
+                icon: ChartColumn,
+                path: "/reports",
             },
         ],
     },
