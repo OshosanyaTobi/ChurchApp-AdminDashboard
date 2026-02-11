@@ -2,7 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import API from '@/api/axios';
 
-const Header = ({ category, title }) => {
+const Header = ({ category, title, showLogout = true }) => {
   const navigate = useNavigate();
 
   const handleLogout = async () => {
@@ -17,7 +17,7 @@ const Header = ({ category, title }) => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
 
-    // 🔴 IMPORTANT: remove auth header
+    // Remove auth header
     delete API.defaults.headers.common['Authorization'];
 
     // Redirect to login
@@ -33,13 +33,15 @@ const Header = ({ category, title }) => {
         </p>
       </div>
 
-      <button
-        type="button"
-        onClick={handleLogout}
-        className="text-red-600 font-semibold hover:underline"
-      >
-        Logout
-      </button>
+      {showLogout && (
+        <button
+          type="button"
+          onClick={handleLogout}
+          className="text-red-600 font-semibold hover:underline"
+        >
+          Logout
+        </button>
+      )}
     </div>
   );
 };

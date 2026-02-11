@@ -51,7 +51,6 @@ export default function AdminAnnouncementsCreate() {
 
       toast.success(res.data.message || "Announcement sent successfully");
 
-      // Reset form
       setTitle("");
       setMessage("");
       setType("announcement");
@@ -66,18 +65,26 @@ export default function AdminAnnouncementsCreate() {
   };
 
   return (
-    <div className="max-w-2xl mx-auto mt-12 p-6 bg-white shadow-md rounded-md">
-      <h1 className="text-2xl font-bold mb-6">
+    <div className="max-w-2xl mx-auto mt-12 p-6 rounded-md shadow-md bg-white dark:bg-slate-900">
+      
+      <h1 className="text-2xl font-bold mb-6 text-slate-900 dark:text-slate-50">
         Send Announcement / Alert
       </h1>
 
       <form onSubmit={handleSubmit} className="space-y-5">
+
         {/* Title */}
         <div>
-          <label className="block font-semibold mb-1">Title</label>
+          <label className="block font-semibold mb-1 text-slate-700 dark:text-slate-300">
+            Title
+          </label>
           <input
             type="text"
-            className="w-full border border-gray-300 rounded px-3 py-2"
+            className="w-full border rounded px-3 py-2 
+              bg-white dark:bg-slate-950
+              border-gray-300 dark:border-slate-700
+              text-slate-900 dark:text-slate-50
+              focus:outline-none focus:ring-2 focus:ring-blue-500"
             placeholder="e.g., Sunday Service Update"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
@@ -87,10 +94,16 @@ export default function AdminAnnouncementsCreate() {
 
         {/* Message */}
         <div>
-          <label className="block font-semibold mb-1">Message</label>
+          <label className="block font-semibold mb-1 text-slate-700 dark:text-slate-300">
+            Message
+          </label>
           <textarea
-            className="w-full border border-gray-300 rounded px-3 py-2"
             rows="5"
+            className="w-full border rounded px-3 py-2 
+              bg-white dark:bg-slate-950
+              border-gray-300 dark:border-slate-700
+              text-slate-900 dark:text-slate-50
+              focus:outline-none focus:ring-2 focus:ring-blue-500"
             placeholder="Enter announcement details here..."
             value={message}
             onChange={(e) => setMessage(e.target.value)}
@@ -100,9 +113,15 @@ export default function AdminAnnouncementsCreate() {
 
         {/* Type */}
         <div>
-          <label className="block font-semibold mb-1">Type</label>
+          <label className="block font-semibold mb-1 text-slate-700 dark:text-slate-300">
+            Type
+          </label>
           <select
-            className="w-full border border-gray-300 rounded px-3 py-2"
+            className="w-full border rounded px-3 py-2 
+              bg-white dark:bg-slate-950
+              border-gray-300 dark:border-slate-700
+              text-slate-900 dark:text-slate-50
+              focus:outline-none focus:ring-2 focus:ring-blue-500"
             value={type}
             onChange={(e) => setType(e.target.value)}
           >
@@ -113,12 +132,16 @@ export default function AdminAnnouncementsCreate() {
 
         {/* Volunteers */}
         <div>
-          <label className="block font-semibold mb-1">
+          <label className="block font-semibold mb-1 text-slate-700 dark:text-slate-300">
             Select Volunteers
           </label>
           <select
             multiple
-            className="w-full border border-gray-300 rounded px-3 py-2 h-40"
+            className="w-full border rounded px-3 py-2 h-40 
+              bg-white dark:bg-slate-950
+              border-gray-300 dark:border-slate-700
+              text-slate-900 dark:text-slate-50
+              focus:outline-none focus:ring-2 focus:ring-blue-500"
             value={selectedVolunteers}
             onChange={handleVolunteerSelect}
           >
@@ -128,7 +151,8 @@ export default function AdminAnnouncementsCreate() {
               </option>
             ))}
           </select>
-          <p className="text-sm text-gray-500 mt-1">
+
+          <p className="text-sm mt-1 text-gray-500 dark:text-slate-400">
             Hold Ctrl (Windows) or Cmd (Mac) to select multiple
           </p>
         </div>
@@ -145,6 +169,7 @@ export default function AdminAnnouncementsCreate() {
         >
           {loading ? "Sending..." : "Send"}
         </button>
+
       </form>
     </div>
   );

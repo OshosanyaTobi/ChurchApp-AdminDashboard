@@ -24,10 +24,14 @@ export const StateProvider = ({ children }) => {
   const [themeSettings, setThemeSettings] = useState(false);
 
   // ================= AUTH STATE =================
-  const [user, setUser] = useState(null);
-  const [token, setToken] = useState(
-    () => localStorage.getItem("token")
+  const [token, setToken] = useState(() =>
+    localStorage.getItem("token")
   );
+
+  const [user, setUser] = useState(() => {
+    const storedUser = localStorage.getItem("user");
+    return storedUser ? JSON.parse(storedUser) : null;
+  });
 
   // ================= UI METHODS =================
   const handleClick = (clicked) =>
@@ -40,21 +44,38 @@ export const StateProvider = ({ children }) => {
 
   const login = async (credentials) => {
     const { data } = await API.post("/login", credentials);
+
     localStorage.setItem("token", data.token);
+    localStorage.setItem("user", JSON.stringify(data.user));
+
     setToken(data.token);
     setUser(data.user);
   };
 
-  const logout = () => {
+  // ✅ IMPROVED LOGOUT (Backend + Redirect)
+  const logout = async () => {
+    try {
+      await API.post("/logout");
+    } catch (error) {
+      // ignore backend logout failure
+    }
+
     localStorage.removeItem("token");
+    localStorage.removeItem("user");
+
     setToken(null);
     setUser(null);
+
+    // Force redirect to login
+    window.location.href = "/login";
   };
 
   const fetchProfile = async () => {
     try {
       const { data } = await API.get("/profile");
+
       setUser(data);
+      localStorage.setItem("user", JSON.stringify(data));
     } catch {
       logout();
     }

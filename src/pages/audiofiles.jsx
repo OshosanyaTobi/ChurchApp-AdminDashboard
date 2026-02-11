@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { openUpload } from '@bytescale/upload-widget';
-import Header from '@/components/Header';
+import { useTheme } from '@/hooks/use-theme';
 import API from '../api/axios';
 
 const AudioFile = () => {
+  const { theme } = useTheme();
   const [title, setTitle] = useState('');
   const [audioFile, setAudioFile] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -13,7 +14,6 @@ const AudioFile = () => {
 
   const perPage = 5;
 
-  // ================= UPLOAD AUDIO =================
   const uploadAudio = async () => {
     const result = await openUpload({
       apiKey: process.env.REACT_APP_BYTESCALE_KEY,
@@ -23,10 +23,9 @@ const AudioFile = () => {
 
     if (!result || result.length === 0) return null;
 
-    return result[0]; // { fileUrl, filePath, etag }
+    return result[0];
   };
 
-  // ================= LOAD AUDIO =================
   const loadAudio = async () => {
     try {
       const res = await API.getAudio();
@@ -42,7 +41,6 @@ const AudioFile = () => {
     loadAudio();
   }, []);
 
-  // ================= SUBMIT AUDIO =================
   const submitAudio = async () => {
     if (!title || !audioFile) {
       alert('Title and audio are required');
@@ -53,7 +51,6 @@ const AudioFile = () => {
       setLoading(true);
 
       const audioData = await uploadAudio();
-
       if (!audioData) {
         alert('Upload failed');
         return;
@@ -78,7 +75,6 @@ const AudioFile = () => {
     }
   };
 
-  // ================= DELETE AUDIO =================
   const deleteAudio = async (id) => {
     if (!window.confirm('Are you sure you want to delete this audio?')) return;
 
@@ -90,7 +86,6 @@ const AudioFile = () => {
     }
   };
 
-  // ================= FILTER & PAGINATION =================
   const filteredAudio = Array.isArray(audio)
     ? audio.filter((a) => a.title.toLowerCase().includes(search.toLowerCase()))
     : [];
@@ -99,13 +94,17 @@ const AudioFile = () => {
   const paginatedAudio = filteredAudio.slice((page - 1) * perPage, page * perPage);
 
   return (
-    <div className="m-2 md:m-10 mt-24 p-6 bg-white rounded-3xl">
-      <Header category="Ministry" title="Audio Files" />
+    <div className={`${theme === 'dark' ? 'bg-gray-900 text-gray-100' : 'bg-white text-gray-900'} p-6 rounded-3xl m-2 md:m-10 mt-24`}>
+      
+      {/* ===== PAGE TITLE ===== */}
+      <h1 className="text-2xl font-bold mb-6">
+        Audio Files
+      </h1>
 
       {/* ===== UPLOAD FORM ===== */}
       <div className="space-y-4 mb-6">
         <input
-          className="border p-2 rounded w-full"
+          className={`${theme === 'dark' ? 'bg-gray-700 text-gray-100 border-gray-600' : 'bg-white text-gray-900 border-gray-300'} border p-2 rounded w-full`}
           placeholder="Audio Title"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
@@ -118,7 +117,6 @@ const AudioFile = () => {
             onChange={(e) => setAudioFile(e.target.files[0])}
           />
 
-          {/* ===== AUDIO FILE PREVIEW ===== */}
           {audioFile && (
             <span className="text-gray-700 text-sm">
               Selected file: {audioFile.name}
@@ -142,20 +140,19 @@ const AudioFile = () => {
         value={search}
         onChange={(e) => {
           setSearch(e.target.value);
-          setPage(1); // reset page when searching
+          setPage(1);
         }}
-        className="border p-2 w-full mb-4"
+        className={`${theme === 'dark' ? 'bg-gray-700 text-gray-100 border-gray-600' : 'bg-white text-gray-900 border-gray-300'} border p-2 w-full mb-4 rounded`}
       />
 
       {/* ===== AUDIO LIST ===== */}
       <div className="space-y-4">
         {paginatedAudio.length > 0 ? (
           paginatedAudio.map((s) => (
-            <div key={s.id} className="border p-4 rounded">
+            <div key={s.id} className={`${theme === 'dark' ? 'bg-gray-800' : 'bg-white'} border p-4 rounded`}>
               <h3 className="font-bold text-lg">{s.title}</h3>
 
               {s.audio_url && (
-                // eslint-disable-next-line jsx-a11y/media-has-caption
                 <audio controls className="mt-3 w-full">
                   <source src={s.audio_url} />
                 </audio>
@@ -175,7 +172,7 @@ const AudioFile = () => {
         )}
       </div>
 
-      {/* ===== PAGINATION (PILLS) ===== */}
+      {/* ===== PAGINATION ===== */}
       {totalPages > 1 && (
         <div className="flex justify-center gap-2 mt-4">
           {[...Array(totalPages)].map((_, i) => (
@@ -185,6 +182,8 @@ const AudioFile = () => {
               className={`px-4 py-1 rounded-full font-semibold transition-colors ${
                 page === i + 1
                   ? 'bg-indigo-600 text-white'
+                  : theme === 'dark'
+                  ? 'bg-gray-700 text-gray-100 hover:bg-gray-600'
                   : 'bg-gray-200 text-gray-800 hover:bg-gray-300'
               }`}
             >

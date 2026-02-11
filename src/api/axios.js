@@ -8,15 +8,19 @@ const API = axios.create({
 API.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+    if (token) config.headers.Authorization = `Bearer ${token}`;
+
+    // If sending FormData, let Axios set headers automatically
+    if (config.data instanceof FormData) {
+      config.headers['Content-Type'] = 'multipart/form-data';
     }
+
     return config;
   },
-  (error) => Promise.reject(error),
+  (error) => Promise.reject(error)
 );
 
-// Handle auth failure
+// Handle auth failure globally
 API.interceptors.response.use(
   (response) => response,
   (error) => {
@@ -25,73 +29,69 @@ API.interceptors.response.use(
       window.location.href = '/login';
     }
     return Promise.reject(error);
-  },
+  }
 );
 
-// USERS
+/* ================= BLOGS ================= */
+API.getBlogs = () => API.get('/blogs');
+API.createBlog = (data) => API.post('/blogs', data);
+API.updateBlog = (id, data) => API.patch(`/blogs/${id}`, data); // ✅ Use PATCH for partial updates
+API.deleteBlog = (id) => API.delete(`/blogs/${id}`);
+
+/* ================= USERS ================= */
 API.getUsers = () => API.get('/users');
 API.createUser = (data) => API.post('/register', data);
 API.updateUser = (id, data) => API.put(`/users/${id}`, data);
 API.deleteUser = (id) => API.delete(`/users/${id}`);
 
-// DONATIONS
-API.getDonations = () => API.get('/donations');
-API.createDonation = (data) => API.post('/donations', data);
-
-// ADMIN
+/* ================= ADMIN ================= */
 API.getAdmins = () => API.get('/users');
 API.createAdmin = (data) => API.post('/admins', data);
-API.updateAdmin = (id, data) => API.put(`/workers/${id}`, data);
-API.deleteAdmin = (id) => API.delete(`/workers/${id}`);
+API.updateAdmin = (id, data) => API.put(`/admins/${id}`, data);
+API.deleteAdmin = (id) => API.delete(`/admins/${id}`);
 
-// EVENTS
-export const getEvents = () => API.get('/events');
-export const createEvent = (formData) => API.post('/events', formData); // <-- no headers
-export const deleteEvent = (id) => API.delete(`/events/${id}`);
+/* ================= EVENTS ================= */
+API.getEvents = () => API.get('/events');
+API.createEvent = (data) => API.post('/events', data);
+API.updateEvent = (id, data) => API.put(`/events/${id}`, data);
+API.deleteEvent = (id) => API.delete(`/events/${id}`);
 
-// AUDIO FILES
+/* ================= AUDIO ================= */
 API.getAudio = () => API.get('/audio');
 API.createAudio = (data) => API.post('/audio/upload', data);
 API.updateAudio = (id, data) => API.put(`/audio/${id}`, data);
 API.deleteAudio = (id) => API.delete(`/audio/${id}`);
 
-// WATCH SECTION
-API.getWatchSection = () => API.get('/watch-sections');
+/* ================= WATCH SECTIONS ================= */
+API.getWatchSections = () => API.get('/watch-sections');
 API.createWatchSection = (data) => API.post('/watch-sections', data);
 API.updateWatchSection = (id, data) => API.put(`/watch-sections/${id}`, data);
 API.deleteWatchSection = (id) => API.delete(`/watch-sections/${id}`);
 
-// Blogs
-API.getBlogs = () => API.get('/blogs');
-API.createBlog = (data) => API.post('/blogs', data);
-API.updateBlog = (id, data) => API.put(`/blogs/${id}`, data);
-API.deleteBlog = (id) => API.delete(`/blogs/${id}`);
+/* ================= ROLES ================= */
+API.getRoles = () => API.get('/roles');
+API.createRole = (data) => API.post('/roles', data);
 
-// RECORDS
-API.getRecords = () => API.get('/records');
-
-// ASSIGNMENTS
+/* ================= ASSIGNMENTS ================= */
 API.getAssignments = () => API.get('/assignments');
 API.createAssignment = (data) => API.post('/assignments', data);
 API.updateAssignment = (id, data) => API.put(`/assignments/${id}`, data);
 API.deleteAssignment = (id) => API.delete(`/assignments/${id}`);
 
-// VOLUNTEERS (Admin use)
+/* ================= VOLUNTEERS ================= */
 API.getVolunteers = () => API.get('/volunteers');
 
-// SCHEDULES
-API.getSchedules = () => API.get('/schedules');          // Admin: view all
-API.createSchedule = (data) => API.post('/schedules', data); // Admin: create
-API.getMySchedule = () => API.get('/schedules/my');      // Volunteer: my schedule
+/* ================= SCHEDULES ================= */
+API.getSchedules = () => API.get('/schedules');
+API.createSchedule = (data) => API.post('/schedules', data);
+API.updateSchedule = (id, data) => API.put(`/schedules/${id}`, data);
+API.deleteSchedule = (id) => API.delete(`/schedules/${id}`);
+API.getMySchedule = () => API.get('/my-schedule');
 
-//ANNOUNCEMENTS & ALERTS
-API.createAnnouncement = (data) => API.post('/announcements', data); // Admin: create
+/* ================= ANNOUNCEMENTS ================= */
+API.createAnnouncement = (data) => API.post('/announcements', data);
 
-// VOLUNTEER REPORTS
-API.getReports = () => API.get('/reports/volunteers');          // Admin: view all
-
-//ASSIGNMENTS
-API.createAssignment = (data) => API.post('/assignments', data); // Admin: create
-
+/* ================= REPORTS ================= */
+API.getReports = () => API.get('/reports/volunteers');
 
 export default API;

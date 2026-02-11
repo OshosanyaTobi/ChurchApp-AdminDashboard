@@ -1,110 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
+import { useTheme } from '@/hooks/use-theme';
 import API from '../api/axios';
 
-/* ================= STYLES ================= */
-const styles = {
-  container: {
-    padding: '30px',
-    maxWidth: '900px',
-    margin: 'auto',
-    fontFamily: 'Arial, sans-serif',
-  },
-  header: { marginBottom: '20px' },
-  form: {
-    background: '#ffffff',
-    padding: '20px',
-    borderRadius: '12px',
-    marginBottom: '30px',
-    boxShadow: '0 10px 25px rgba(0,0,0,0.05)',
-  },
-  input: {
-    width: '100%',
-    padding: '10px',
-    marginBottom: '10px',
-    borderRadius: '6px',
-    border: '1px solid #d1d5db',
-  },
-  select: {
-    width: '100%',
-    padding: '10px',
-    marginBottom: '10px',
-    borderRadius: '6px',
-    border: '1px solid #d1d5db',
-    height: '45px',
-  },
-  search: {
-    width: '100%',
-    padding: '10px',
-    marginBottom: '20px',
-    borderRadius: '6px',
-    border: '1px solid #d1d5db',
-  },
-  primaryBtn: {
-    backgroundColor: '#2563eb',
-    color: '#ffffff',
-    padding: '10px 18px',
-    border: 'none',
-    borderRadius: '6px',
-    cursor: 'pointer',
-    fontWeight: '600',
-  },
-  secondaryBtn: {
-    backgroundColor: '#e5e7eb',
-    color: '#111827',
-    padding: '10px 18px',
-    border: 'none',
-    borderRadius: '6px',
-    cursor: 'pointer',
-    marginLeft: '10px',
-  },
-  dangerBtn: {
-    backgroundColor: '#dc2626',
-    color: '#ffffff',
-    padding: '8px 14px',
-    border: 'none',
-    borderRadius: '6px',
-    cursor: 'pointer',
-    marginLeft: '10px',
-  },
-  outlineBtn: {
-    backgroundColor: 'transparent',
-    border: '1px solid #2563eb',
-    color: '#2563eb',
-    padding: '8px 14px',
-    borderRadius: '6px',
-    cursor: 'pointer',
-  },
-  card: {
-    background: '#ffffff',
-    padding: '20px',
-    borderRadius: '12px',
-    marginBottom: '20px',
-    boxShadow: '0 10px 25px rgba(0,0,0,0.05)',
-  },
-  meta: {
-    color: '#6b7280',
-    fontSize: '14px',
-    marginBottom: '10px',
-  },
-  actions: { marginTop: '15px' },
-  pagination: {
-    display: 'flex',
-    justifyContent: 'center',
-    gap: '10px',
-    marginTop: '20px',
-  },
-  pageBtn: {
-    padding: '6px 12px',
-    borderRadius: '6px',
-    border: 'none',
-    cursor: 'pointer',
-  },
-};
-
-/* ================= COMPONENT ================= */
 const Assignments = () => {
+  const { theme } = useTheme();
   const [assignments, setAssignments] = useState([]);
   const [form, setForm] = useState({
     title: '',
@@ -117,10 +18,15 @@ const Assignments = () => {
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [quillKey, setQuillKey] = useState(Date.now());
 
   const perPage = 5;
 
-  /* ===== FETCH ASSIGNMENTS ===== */
+  useEffect(() => {
+    fetchAssignments();
+    fetchVolunteers();
+  }, []);
+
   const fetchAssignments = async () => {
     try {
       const res = await API.getAssignments();
@@ -131,7 +37,6 @@ const Assignments = () => {
     }
   };
 
-  /* ===== FETCH VOLUNTEERS ===== */
   const fetchVolunteers = async () => {
     try {
       const res = await API.getVolunteers();
@@ -142,12 +47,6 @@ const Assignments = () => {
     }
   };
 
-  useEffect(() => {
-    fetchAssignments();
-    fetchVolunteers();
-  }, []);
-
-  /* ===== HANDLERS ===== */
   const handleChange = (e) =>
     setForm({ ...form, [e.target.name]: e.target.value });
 
@@ -162,6 +61,7 @@ const Assignments = () => {
   const resetForm = () => {
     setForm({ title: '', description: '', assignment_date: '', volunteer_ids: [] });
     setEditingId(null);
+    setQuillKey(Date.now());
   };
 
   const handleSubmit = async (e) => {
@@ -171,15 +71,13 @@ const Assignments = () => {
     setLoading(true);
 
     try {
-      if (editingId) {
-        await API.updateAssignment(editingId, form);
-      } else {
-        await API.createAssignment(form);
-      }
+      if (editingId) await API.updateAssignment(editingId, form);
+      else await API.createAssignment(form);
+
       resetForm();
-      fetchAssignments();
+      await fetchAssignments();
     } catch (err) {
-      console.error(err);
+      console.error(err.response?.data || err);
     } finally {
       setLoading(false);
     }
@@ -190,24 +88,23 @@ const Assignments = () => {
       title: assignment.title || '',
       description: assignment.description || '',
       assignment_date: assignment.assignment_date || '',
-      volunteer_ids: assignment.volunteers
-        ? assignment.volunteers.map((v) => String(v.id))
-        : [],
+      volunteer_ids: assignment.volunteers?.map((v) => String(v.id)) || [],
     });
     setEditingId(assignment.id);
   };
 
   const handleDelete = async (id) => {
     if (!window.confirm('Delete this assignment?')) return;
+
     try {
       await API.deleteAssignment(id);
-      fetchAssignments();
+      await fetchAssignments();
+      setPage(1);
     } catch (err) {
-      console.error(err);
+      console.error(err.response?.data || err);
     }
   };
 
-  /* ===== FILTER & PAGINATION ===== */
   const filteredAssignments = assignments.filter((a) =>
     a.title.toLowerCase().includes(search.toLowerCase())
   );
@@ -219,26 +116,28 @@ const Assignments = () => {
   );
 
   return (
-    <div style={styles.container}>
-      <h1 style={styles.header}>📋 Assignment Management</h1>
+    <div className={`${theme === 'dark' ? 'bg-gray-900 text-gray-100' : 'bg-white text-gray-900'} p-6 rounded-md max-w-3xl mx-auto`}>
+      
+      {/* ===== PAGE TITLE ===== */}
+      <h1 className="text-2xl font-bold mb-6">
+        Create New Assignment
+      </h1>
 
       {/* ===== FORM ===== */}
-      <form onSubmit={handleSubmit} style={styles.form}>
-        <h3>{editingId ? 'Edit Assignment' : 'Create Assignment'}</h3>
-
+      <form onSubmit={handleSubmit} className={`${theme === 'dark' ? 'bg-gray-800' : 'bg-white'} p-6 rounded-md mb-6 shadow`}>
         <input
           name="title"
           placeholder="Assignment title"
           value={form.title}
           onChange={handleChange}
           required
-          style={styles.input}
+          className={`${theme === 'dark' ? 'bg-gray-700 text-gray-100 border-gray-600' : 'bg-white text-gray-900 border-gray-300'} w-full p-2 rounded mb-4 border`}
         />
 
         <ReactQuill
+          key={quillKey}
           value={form.description}
           onChange={(value) => setForm({ ...form, description: value })}
-          style={{ marginBottom: '15px' }}
         />
 
         <input
@@ -247,14 +146,14 @@ const Assignments = () => {
           value={form.assignment_date}
           onChange={handleChange}
           required
-          style={styles.input}
+          className={`${theme === 'dark' ? 'bg-gray-700 text-gray-100 border-gray-600' : 'bg-white text-gray-900 border-gray-300'} w-full p-2 rounded mb-4 border`}
         />
 
         <select
           multiple
           value={form.volunteer_ids}
           onChange={handleMultiSelect}
-          style={styles.select}
+          className={`${theme === 'dark' ? 'bg-gray-700 text-gray-100 border-gray-600' : 'bg-white text-gray-900 border-gray-300'} w-full p-2 rounded mb-4 border`}
         >
           {volunteers.map((v) => (
             <option key={v.id} value={v.id}>
@@ -263,30 +162,20 @@ const Assignments = () => {
           ))}
         </select>
 
-        <div style={{ marginTop: '15px' }}>
+        <div className="flex items-center gap-2">
           <button
             type="submit"
-            style={{
-              ...styles.primaryBtn,
-              opacity: loading ? 0.7 : 1,
-              cursor: loading ? 'not-allowed' : 'pointer',
-            }}
             disabled={loading}
+            className="bg-blue-600 text-white px-4 py-2 rounded disabled:opacity-50"
           >
-            {loading
-              ? editingId
-                ? 'Updating...'
-                : 'Creating...'
-              : editingId
-              ? 'Update Assignment'
-              : 'Create Assignment'}
+            {loading ? (editingId ? 'Updating...' : 'Creating...') : (editingId ? 'Update Assignment' : 'Create Assignment')}
           </button>
 
           {editingId && (
             <button
               type="button"
               onClick={resetForm}
-              style={styles.secondaryBtn}
+              className="bg-gray-400 text-black px-4 py-2 rounded"
             >
               Cancel
             </button>
@@ -298,37 +187,38 @@ const Assignments = () => {
       <input
         placeholder="Search assignments..."
         value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        style={styles.search}
+        onChange={(e) => {
+          setSearch(e.target.value);
+          setPage(1);
+        }}
+        className={`${theme === 'dark' ? 'bg-gray-700 text-gray-100 border-gray-600' : 'bg-white text-gray-900 border-gray-300'} w-full p-2 rounded mb-4 border`}
       />
 
       {/* ===== ASSIGNMENT LIST ===== */}
-      {paginatedAssignments.map((assignment) => (
-        <div key={assignment.id} style={styles.card}>
-          <h2>{assignment.title}</h2>
-
-          <p style={styles.meta}>
-            {assignment.assignment_date}
-          </p>
-
-          <div dangerouslySetInnerHTML={{ __html: assignment.description }} />
-
-          {assignment.volunteers && assignment.volunteers.length > 0 && (
-            <p style={styles.meta}>
-              Assigned to: {assignment.volunteers.map((v) => v.name).join(', ')}
+      {paginatedAssignments.map((a) => (
+        <div
+          key={a.id}
+          className={`${theme === 'dark' ? 'bg-gray-800' : 'bg-white'} p-4 rounded mb-4 shadow`}
+        >
+          <h2 className="font-bold">{a.title}</h2>
+          <p className="text-sm text-gray-400">{a.assignment_date}</p>
+          <div dangerouslySetInnerHTML={{ __html: a.description }} />
+          {a.volunteers?.length > 0 && (
+            <p className="text-sm text-gray-400">
+              Assigned to: {a.volunteers.map((v) => v.name).join(', ')}
             </p>
           )}
 
-          <div style={styles.actions}>
+          <div className="flex gap-2 mt-2">
             <button
-              onClick={() => handleEdit(assignment)}
-              style={styles.outlineBtn}
+              onClick={() => handleEdit(a)}
+              className="border border-blue-600 text-blue-600 px-3 py-1 rounded"
             >
               Edit
             </button>
             <button
-              onClick={() => handleDelete(assignment.id)}
-              style={styles.dangerBtn}
+              onClick={() => handleDelete(a.id)}
+              className="bg-red-600 text-white px-3 py-1 rounded"
             >
               Delete
             </button>
@@ -337,16 +227,18 @@ const Assignments = () => {
       ))}
 
       {/* ===== PAGINATION ===== */}
-      <div style={styles.pagination}>
+      <div className="flex justify-center gap-2 mt-4">
         {[...Array(totalPages)].map((_, i) => (
           <button
             key={i}
             onClick={() => setPage(i + 1)}
-            style={{
-              ...styles.pageBtn,
-              background: page === i + 1 ? '#2563eb' : '#e5e7eb',
-              color: page === i + 1 ? '#fff' : '#000',
-            }}
+            className={`px-3 py-1 rounded ${
+              page === i + 1
+                ? 'bg-blue-600 text-white'
+                : theme === 'dark'
+                ? 'bg-gray-700 text-gray-100'
+                : 'bg-gray-200 text-black'
+            }`}
           >
             {i + 1}
           </button>

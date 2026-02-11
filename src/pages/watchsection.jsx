@@ -4,7 +4,7 @@ import API from "../api/axios";
 export default function WatchSection() {
   const [watchsection, setWatchSection] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [creating, setCreating] = useState(false); // for "Creating..." animation
+  const [creating, setCreating] = useState(false);
   const [form, setForm] = useState({
     title: "",
     description: "",
@@ -13,10 +13,8 @@ export default function WatchSection() {
   });
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
-
   const perPage = 5;
 
-  // ================= LOAD WATCH ITEMS =================
   const loadWatchSection = async () => {
     setLoading(true);
     try {
@@ -31,11 +29,8 @@ export default function WatchSection() {
     }
   };
 
-  useEffect(() => {
-    loadWatchSection();
-  }, []);
+  useEffect(() => { loadWatchSection(); }, []);
 
-  // ================= CREATE WATCH ITEM =================
   const handleCreate = async () => {
     if (!form.title || !form.description) return;
 
@@ -59,10 +54,8 @@ export default function WatchSection() {
     }
   };
 
-  // ================= DELETE WATCH ITEM =================
   const handleDelete = async (id) => {
     if (!window.confirm("Delete this watch item?")) return;
-
     try {
       await API.delete(`/watch-sections/${id}`);
       await loadWatchSection();
@@ -71,7 +64,6 @@ export default function WatchSection() {
     }
   };
 
-  // ================= FILTER & PAGINATION =================
   const filteredItems = Array.isArray(watchsection)
     ? watchsection.filter((item) =>
         item.title.toLowerCase().includes(search.toLowerCase())
@@ -81,85 +73,52 @@ export default function WatchSection() {
   const totalPages = Math.ceil(filteredItems.length / perPage);
   const paginatedItems = filteredItems.slice((page - 1) * perPage, page * perPage);
 
-  if (loading) return <p>Loading...</p>;
+  if (loading) return <p className="text-slate-900 dark:text-slate-50">Loading...</p>;
 
   return (
-    <div className="p-6">
+    <div className="p-6 bg-white dark:bg-slate-900 min-h-screen text-slate-900 dark:text-slate-50">
       <h2 className="text-xl font-bold mb-4">Watch Section</h2>
 
       {/* ===== FORM ===== */}
-      <div className="space-y-3 mb-6">
+      <div className="space-y-3 mb-6 p-4 rounded shadow-md bg-white dark:bg-slate-950">
         <input
-          className="border p-2 w-full rounded"
+          className="border p-2 w-full rounded border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-50"
           placeholder="Title"
           value={form.title}
           onChange={(e) => setForm({ ...form, title: e.target.value })}
         />
 
         <textarea
-          className="border p-2 w-full rounded"
+          className="border p-2 w-full rounded border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-50"
           placeholder="Description"
           value={form.description}
           onChange={(e) => setForm({ ...form, description: e.target.value })}
         />
 
         <input
-          className="border p-2 w-full rounded"
-          placeholder="Video link (YouTube / Vimeo)"
+          className="border p-2 w-full rounded border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-50"
+          placeholder="Video link (YouTube)"
           value={form.video_link}
           onChange={(e) => setForm({ ...form, video_link: e.target.value })}
         />
 
-        <div className="flex items-center gap-4">
+        <label className="border p-2 w-full rounded cursor-pointer text-gray-700 dark:text-gray-300 text-center bg-white dark:bg-slate-800">
+          {form.image ? `Selected: ${form.image.name}` : "Choose thumbnail"}
           <input
             type="file"
             accept="image/*"
-            className="border p-2 w-full rounded"
+            className="hidden"
             onChange={(e) => setForm({ ...form, image: e.target.files[0] })}
           />
-
-          {form.image && (
-            <span className="text-gray-700 text-sm">
-              Selected: {form.image.name}
-            </span>
-          )}
-        </div>
+        </label>
 
         <button
           type="button"
           onClick={handleCreate}
           disabled={creating}
-          className={`bg-indigo-600 text-white px-4 py-2 rounded flex items-center justify-center gap-2 ${
-            creating ? "opacity-70 cursor-not-allowed" : ""
-          }`}
+          className={`w-full px-4 py-2 rounded text-white bg-indigo-600 hover:bg-indigo-700 ${creating ? "opacity-70 cursor-not-allowed" : ""}`}
         >
-          {creating ? (
-            <>
-              <svg
-                className="animate-spin h-5 w-5 text-white"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-              >
-                <circle
-                  className="opacity-25"
-                  cx="12"
-                  cy="12"
-                  r="10"
-                  stroke="currentColor"
-                  strokeWidth="4"
-                ></circle>
-                <path
-                  className="opacity-75"
-                  fill="currentColor"
-                  d="M4 12a8 8 0 018-8v8H4z"
-                ></path>
-              </svg>
-              Creating...
-            </>
-          ) : (
-            "Create Watch Item"
-          )}
+          {creating ? "Creating..." : "Create Watch Item"}
         </button>
       </div>
 
@@ -168,30 +127,24 @@ export default function WatchSection() {
         type="text"
         placeholder="Search watch items..."
         value={search}
-        onChange={(e) => {
-          setSearch(e.target.value);
-          setPage(1);
-        }}
-        className="border p-2 w-full mb-4 rounded"
+        onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+        className="border p-2 w-full mb-4 rounded border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-50"
       />
 
       {/* ===== WATCH ITEMS LIST ===== */}
       <div className="space-y-4">
         {paginatedItems.length > 0 ? (
           paginatedItems.map((item) => (
-            <div
-              key={item.id}
-              className="border p-4 rounded shadow-sm"
-            >
+            <div key={item.id} className="border p-4 rounded shadow-sm bg-white dark:bg-slate-950">
               <h4 className="font-bold">{item.title}</h4>
-              <p className="text-sm mt-1">{item.description}</p>
+              <p className="text-sm mt-1 text-slate-700 dark:text-slate-300">{item.description}</p>
 
               {item.video_link && (
                 <a
                   href={item.video_link}
                   target="_blank"
                   rel="noreferrer"
-                  className="text-indigo-600 text-sm block mt-2"
+                  className="text-indigo-600 dark:text-indigo-400 text-sm block mt-2"
                 >
                   Watch Video
                 </a>
@@ -211,7 +164,7 @@ export default function WatchSection() {
 
               <button
                 onClick={() => handleDelete(item.id)}
-                className="mt-3 text-red-600 text-sm"
+                className="mt-3 text-red-600 dark:text-red-400 text-sm"
               >
                 Delete
               </button>
@@ -222,7 +175,7 @@ export default function WatchSection() {
         )}
       </div>
 
-      {/* ===== PAGINATION (PILLS) ===== */}
+      {/* ===== PAGINATION ===== */}
       {totalPages > 1 && (
         <div className="flex justify-center gap-2 mt-4">
           {[...Array(totalPages)].map((_, i) => (
@@ -232,7 +185,7 @@ export default function WatchSection() {
               className={`px-4 py-1 rounded-full font-semibold transition-colors ${
                 page === i + 1
                   ? "bg-indigo-600 text-white"
-                  : "bg-gray-200 text-gray-800 hover:bg-gray-300"
+                  : "bg-gray-200 dark:bg-slate-700 text-gray-900 dark:text-slate-50 hover:bg-gray-300 dark:hover:bg-slate-600"
               }`}
             >
               {i + 1}
