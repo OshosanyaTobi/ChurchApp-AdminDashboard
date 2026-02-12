@@ -17,6 +17,7 @@ import AdminCreateSchedule from "./pages/admincreateschedule";
 import AdminAnnouncementsCreate from "./pages/admincreateannouncements";
 import AdminVolunteerReports from "./pages/adminvolunteerreports";
 import Assignments from "./pages/assignments";
+import SettingsPage from "./pages/settings";
 
 function App() {
   const router = createBrowserRouter([
@@ -46,7 +47,7 @@ function App() {
         { path: "assignments", element: <Assignments /> },
         { path: "schedules", element: <AdminCreateSchedule /> },
         { path: "reports", element: <AdminVolunteerReports /> },
-        { path: "settings", element: <h1 className="title">Settings</h1> },
+        { path: "settings", element: <SettingsPage/> },
         { path: "logout", element: <Logout /> },
       ],
     },

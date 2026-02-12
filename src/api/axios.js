@@ -9,12 +9,6 @@ API.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
     if (token) config.headers.Authorization = `Bearer ${token}`;
-
-    // If sending FormData, let Axios set headers automatically
-    if (config.data instanceof FormData) {
-      config.headers['Content-Type'] = 'multipart/form-data';
-    }
-
     return config;
   },
   (error) => Promise.reject(error)
@@ -35,7 +29,10 @@ API.interceptors.response.use(
 /* ================= BLOGS ================= */
 API.getBlogs = () => API.get('/blogs');
 API.createBlog = (data) => API.post('/blogs', data);
-API.updateBlog = (id, data) => API.patch(`/blogs/${id}`, data); // ✅ Use PATCH for partial updates
+API.updateBlog = (id, data) => {
+  data.append('_method', 'PATCH');
+  return API.post(`/blogs/${id}`, data);
+};
 API.deleteBlog = (id) => API.delete(`/blogs/${id}`);
 
 /* ================= USERS ================= */
@@ -93,5 +90,15 @@ API.createAnnouncement = (data) => API.post('/announcements', data);
 
 /* ================= REPORTS ================= */
 API.getReports = () => API.get('/reports/volunteers');
+
+/* ================= SETTINGS ================= */
+// Fetch current user
+API.getProfile = () => API.get('/auth/me');
+
+// Update profile (name + email)
+API.updateProfile = (data) => API.put('/users/update-profile', data);
+
+// Update password
+API.updatePassword = (data) => API.put('/users/update-password', data);
 
 export default API;
