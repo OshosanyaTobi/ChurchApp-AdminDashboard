@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from "react";
-import API from "../api/axios";
+import { useEffect, useState } from "react";
+import API from "@/api/axios";
+import toast from "react-hot-toast";
 
-const AdminWhatsApp = () => {
+export default function AdminWhatsApp() {
   const [links, setLinks] = useState([]);
   const [loading, setLoading] = useState(false);
   const [creating, setCreating] = useState(false);
@@ -12,17 +13,14 @@ const AdminWhatsApp = () => {
     message: "",
   });
 
-  const [success, setSuccess] = useState("");
-  const [error, setError] = useState("");
-
-  /* ================= FETCH LINKS ================= */
   const fetchLinks = async () => {
+    setLoading(true);
     try {
-      setLoading(true);
       const res = await API.get("/whatsapp-links");
       setLinks(res.data.data || []);
     } catch (err) {
-      setError("Failed to fetch WhatsApp links");
+      toast.error("Failed to fetch WhatsApp links");
+      setLinks([]);
     } finally {
       setLoading(false);
     }
@@ -32,26 +30,13 @@ const AdminWhatsApp = () => {
     fetchLinks();
   }, []);
 
-  /* ================= HANDLE INPUT ================= */
-  const handleChange = (e) => {
-    setForm({
-      ...form,
-      [e.target.name]: e.target.value,
-    });
-  };
-
-  /* ================= CREATE LINK ================= */
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     setCreating(true);
-    setSuccess("");
-    setError("");
 
     try {
       await API.post("/whatsapp-links", form);
-
-      setSuccess("WhatsApp link created successfully 🎉");
+      toast.success("WhatsApp link created successfully 🎉");
 
       setForm({
         title: "",
@@ -59,9 +44,9 @@ const AdminWhatsApp = () => {
         message: "",
       });
 
-      fetchLinks(); // refresh list
+      fetchLinks();
     } catch (err) {
-      setError(
+      toast.error(
         err.response?.data?.message || "Failed to create WhatsApp link"
       );
     } finally {
@@ -69,120 +54,140 @@ const AdminWhatsApp = () => {
     }
   };
 
+  const copyToClipboard = (link) => {
+    navigator.clipboard.writeText(link);
+    toast.success("Link copied to clipboard");
+  };
+
   return (
-    <div style={{ padding: "30px" }}>
-      <h2 style={{ marginBottom: "20px" }}>Manage WhatsApp Links</h2>
+    <div className="page p-6 max-w-6xl mx-auto text-gray-900 dark:text-gray-100">
+      <h2 className="text-2xl font-bold mb-6">
+        Manage WhatsApp Links
+      </h2>
 
-      {/* ================= FORM ================= */}
-      <form
-        onSubmit={handleSubmit}
-        style={{
-          background: "#f9f9f9",
-          padding: "20px",
-          borderRadius: "10px",
-          marginBottom: "30px",
-        }}
-      >
-        <h3>Create New Link</h3>
+      {/* CREATE FORM */}
+      <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow mb-10 border border-gray-200 dark:border-gray-700">
+        <h3 className="text-lg font-semibold mb-4">
+          Create New WhatsApp Link
+        </h3>
 
-        <input
-          type="text"
-          name="title"
-          placeholder="Department Name (e.g Choir)"
-          value={form.title}
-          onChange={handleChange}
-          required
-          style={inputStyle}
-        />
+        <form onSubmit={handleSubmit} className="grid md:grid-cols-2 gap-4">
+          <input
+            type="text"
+            placeholder="Department Name (e.g Choir)"
+            value={form.title}
+            onChange={(e) =>
+              setForm({ ...form, title: e.target.value })
+            }
+            required
+            className="w-full border px-3 py-2 rounded-lg 
+              bg-white dark:bg-gray-700 
+              text-gray-900 dark:text-white
+              border-gray-300 dark:border-gray-600
+              focus:outline-none focus:ring-2 focus:ring-green-500"
+          />
 
-        <input
-          type="text"
-          name="phone"
-          placeholder="Phone Number (e.g 2348012345678)"
-          value={form.phone}
-          onChange={handleChange}
-          required
-          style={inputStyle}
-        />
+          <input
+            type="text"
+            placeholder="Phone Number (e.g 2348012345678)"
+            value={form.phone}
+            onChange={(e) =>
+              setForm({ ...form, phone: e.target.value })
+            }
+            required
+            className="w-full border px-3 py-2 rounded-lg 
+              bg-white dark:bg-gray-700 
+              text-gray-900 dark:text-white
+              border-gray-300 dark:border-gray-600
+              focus:outline-none focus:ring-2 focus:ring-green-500"
+          />
 
-        <textarea
-          name="message"
-          placeholder="Optional default message"
-          value={form.message}
-          onChange={handleChange}
-          style={{ ...inputStyle, height: "80px" }}
-        />
+          <textarea
+            placeholder="Optional default message"
+            value={form.message}
+            onChange={(e) =>
+              setForm({ ...form, message: e.target.value })
+            }
+            className="md:col-span-2 w-full border px-3 py-2 rounded-lg 
+              bg-white dark:bg-gray-700 
+              text-gray-900 dark:text-white
+              border-gray-300 dark:border-gray-600
+              focus:outline-none focus:ring-2 focus:ring-green-500"
+          />
 
-        <button
-          type="submit"
-          disabled={creating}
-          style={{
-            ...buttonStyle,
-            background: creating ? "#999" : "#1e88e5",
-          }}
-        >
-          {creating ? "Creating..." : "Create WhatsApp Link"}
-        </button>
+          <div className="md:col-span-2">
+            <button
+              type="submit"
+              disabled={creating}
+              className="bg-green-600 hover:bg-green-700 
+                text-white px-6 py-2 rounded-lg 
+                font-semibold transition disabled:opacity-60"
+            >
+              {creating ? "Creating..." : "Create WhatsApp Link"}
+            </button>
+          </div>
+        </form>
+      </div>
 
-        {success && <p style={{ color: "green" }}>{success}</p>}
-        {error && <p style={{ color: "red" }}>{error}</p>}
-      </form>
-
-      {/* ================= LIST ================= */}
-      <h3>All Created Links</h3>
+      {/* LIST */}
+      <h3 className="text-xl font-semibold mb-4">
+        All Created Links
+      </h3>
 
       {loading ? (
-        <p>Loading...</p>
+        <p className="dark:text-gray-300">Loading links...</p>
       ) : links.length === 0 ? (
-        <p>No WhatsApp links created yet.</p>
+        <p className="dark:text-gray-300">
+          No WhatsApp links created yet.
+        </p>
       ) : (
-        <div style={{ display: "grid", gap: "15px" }}>
-          {links.map((item) => (
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {links.map((link) => (
             <div
-              key={item.id}
-              style={{
-                border: "1px solid #ddd",
-                padding: "15px",
-                borderRadius: "8px",
-              }}
+              key={link.id}
+              className="bg-white dark:bg-gray-800 
+                p-5 rounded-xl shadow 
+                border border-gray-200 dark:border-gray-700"
             >
-              <h4>{item.title}</h4>
-              <p><strong>Phone:</strong> {item.phone}</p>
-              {item.message && (
-                <p><strong>Message:</strong> {item.message}</p>
+              <h4 className="text-lg font-bold mb-2">
+                {link.title}
+              </h4>
+
+              <p className="text-sm mb-1">
+                <span className="font-semibold">Phone:</span>{" "}
+                {link.phone}
+              </p>
+
+              {link.message && (
+                <p className="text-sm mb-3">
+                  <span className="font-semibold">Message:</span>{" "}
+                  {link.message}
+                </p>
               )}
-              <a
-                href={item.link}
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{ color: "#1e88e5" }}
-              >
-                Open WhatsApp Link
-              </a>
+
+              <div className="flex gap-4 mt-4">
+                <a
+                  href={link.link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-green-600 dark:text-green-400 
+                    font-semibold hover:underline"
+                >
+                  Open
+                </a>
+
+                <button
+                  onClick={() => copyToClipboard(link.link)}
+                  className="text-blue-600 dark:text-blue-400 
+                    font-semibold hover:underline"
+                >
+                  Copy
+                </button>
+              </div>
             </div>
           ))}
         </div>
       )}
     </div>
   );
-};
-
-/* ================= STYLES ================= */
-
-const inputStyle = {
-  width: "100%",
-  padding: "10px",
-  marginBottom: "10px",
-  borderRadius: "5px",
-  border: "1px solid #ccc",
-};
-
-const buttonStyle = {
-  padding: "10px 20px",
-  border: "none",
-  borderRadius: "5px",
-  color: "#fff",
-  cursor: "pointer",
-};
-
-export default AdminWhatsApp;
+}
