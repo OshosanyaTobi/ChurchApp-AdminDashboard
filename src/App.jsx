@@ -18,6 +18,7 @@ import AdminAnnouncementsCreate from "./pages/admincreateannouncements";
 import AdminVolunteerReports from "./pages/adminvolunteerreports";
 import Assignments from "./pages/assignments";
 import SettingsPage from "./pages/settings";
+import AdminWhatsApp from "./pages/adminwhatsapp";
 
 function App() {
   const router = createBrowserRouter([
@@ -45,6 +46,7 @@ function App() {
         { path: "audiofiles", element: <AudioFile /> },
         { path: "roles", element: <AdminRoleCreate /> },
         { path: "assignments", element: <Assignments /> },
+        { path: "whatsapp-links", element: <AdminWhatsApp /> },
         { path: "schedules", element: <AdminCreateSchedule /> },
         { path: "reports", element: <AdminVolunteerReports /> },
         { path: "settings", element: <SettingsPage/> },

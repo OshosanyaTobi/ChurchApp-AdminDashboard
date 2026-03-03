@@ -6,25 +6,26 @@ import API from '../api/axios';
 
 const Assignments = () => {
   const { theme } = useTheme();
+
   const [assignments, setAssignments] = useState([]);
   const [form, setForm] = useState({
     title: '',
     description: '',
-    assignment_date: '',
-    volunteer_ids: [],
   });
-  const [volunteers, setVolunteers] = useState([]);
+
   const [editingId, setEditingId] = useState(null);
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(false);
   const [quillKey, setQuillKey] = useState(Date.now());
 
+  // ✅ SUCCESS POPUP STATE
+  const [successMessage, setSuccessMessage] = useState('');
+
   const perPage = 5;
 
   useEffect(() => {
     fetchAssignments();
-    fetchVolunteers();
   }, []);
 
   const fetchAssignments = async () => {
@@ -37,45 +38,42 @@ const Assignments = () => {
     }
   };
 
-  const fetchVolunteers = async () => {
-    try {
-      const res = await API.getVolunteers();
-      setVolunteers(Array.isArray(res.data?.data) ? res.data.data : []);
-    } catch (err) {
-      console.error(err);
-      setVolunteers([]);
-    }
-  };
-
   const handleChange = (e) =>
     setForm({ ...form, [e.target.name]: e.target.value });
 
-  const handleMultiSelect = (e) => {
-    const selected = Array.from(
-      e.target.selectedOptions,
-      (option) => option.value
-    );
-    setForm({ ...form, volunteer_ids: selected });
-  };
-
   const resetForm = () => {
-    setForm({ title: '', description: '', assignment_date: '', volunteer_ids: [] });
+    setForm({ title: '', description: '' });
     setEditingId(null);
     setQuillKey(Date.now());
   };
 
+  // ✅ SUCCESS POPUP HELPER
+  const showSuccess = (message) => {
+    setSuccessMessage(message);
+
+    setTimeout(() => {
+      setSuccessMessage('');
+    }, 2000);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!form.title || !form.description || !form.assignment_date) return;
+    if (!form.title || !form.description) return;
 
     setLoading(true);
 
     try {
-      if (editingId) await API.updateAssignment(editingId, form);
-      else await API.createAssignment(form);
+      if (editingId) {
+        await API.updateAssignment(editingId, form);
+        showSuccess('Assignment updated successfully ✅');
+      } else {
+        await API.createAssignment(form);
+        showSuccess('Assignment created successfully ✅');
+      }
 
       resetForm();
       await fetchAssignments();
+
     } catch (err) {
       console.error(err.response?.data || err);
     } finally {
@@ -87,8 +85,6 @@ const Assignments = () => {
     setForm({
       title: assignment.title || '',
       description: assignment.description || '',
-      assignment_date: assignment.assignment_date || '',
-      volunteer_ids: assignment.volunteers?.map((v) => String(v.id)) || [],
     });
     setEditingId(assignment.id);
   };
@@ -100,6 +96,7 @@ const Assignments = () => {
       await API.deleteAssignment(id);
       await fetchAssignments();
       setPage(1);
+      showSuccess('Assignment deleted successfully 🗑️');
     } catch (err) {
       console.error(err.response?.data || err);
     }
@@ -110,6 +107,7 @@ const Assignments = () => {
   );
 
   const totalPages = Math.ceil(filteredAssignments.length / perPage);
+
   const paginatedAssignments = filteredAssignments.slice(
     (page - 1) * perPage,
     page * perPage
@@ -118,20 +116,32 @@ const Assignments = () => {
   return (
     <div className={`${theme === 'dark' ? 'bg-gray-900 text-gray-100' : 'bg-white text-gray-900'} p-6 rounded-md max-w-3xl mx-auto`}>
       
-      {/* ===== PAGE TITLE ===== */}
       <h1 className="text-2xl font-bold mb-6">
         Create New Assignment
       </h1>
 
+      {/* ✅ SUCCESS POPUP */}
+      {successMessage && (
+        <div className="mb-4 bg-green-600 text-white px-4 py-2 rounded shadow animate-pulse text-center">
+          {successMessage}
+        </div>
+      )}
+
       {/* ===== FORM ===== */}
-      <form onSubmit={handleSubmit} className={`${theme === 'dark' ? 'bg-gray-800' : 'bg-white'} p-6 rounded-md mb-6 shadow`}>
+      <form
+        onSubmit={handleSubmit}
+        className={`${theme === 'dark' ? 'bg-gray-800' : 'bg-white'} p-6 rounded-md mb-6 shadow`}
+      >
         <input
           name="title"
           placeholder="Assignment title"
           value={form.title}
           onChange={handleChange}
           required
-          className={`${theme === 'dark' ? 'bg-gray-700 text-gray-100 border-gray-600' : 'bg-white text-gray-900 border-gray-300'} w-full p-2 rounded mb-4 border`}
+          className={`${theme === 'dark'
+              ? 'bg-gray-700 text-gray-100 border-gray-600'
+              : 'bg-white text-gray-900 border-gray-300'
+            } w-full p-2 rounded mb-4 border`}
         />
 
         <ReactQuill
@@ -140,35 +150,19 @@ const Assignments = () => {
           onChange={(value) => setForm({ ...form, description: value })}
         />
 
-        <input
-          type="date"
-          name="assignment_date"
-          value={form.assignment_date}
-          onChange={handleChange}
-          required
-          className={`${theme === 'dark' ? 'bg-gray-700 text-gray-100 border-gray-600' : 'bg-white text-gray-900 border-gray-300'} w-full p-2 rounded mb-4 border`}
-        />
-
-        <select
-          multiple
-          value={form.volunteer_ids}
-          onChange={handleMultiSelect}
-          className={`${theme === 'dark' ? 'bg-gray-700 text-gray-100 border-gray-600' : 'bg-white text-gray-900 border-gray-300'} w-full p-2 rounded mb-4 border`}
-        >
-          {volunteers.map((v) => (
-            <option key={v.id} value={v.id}>
-              {v.name} ({v.email})
-            </option>
-          ))}
-        </select>
-
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 mt-4">
           <button
             type="submit"
             disabled={loading}
             className="bg-blue-600 text-white px-4 py-2 rounded disabled:opacity-50"
           >
-            {loading ? (editingId ? 'Updating...' : 'Creating...') : (editingId ? 'Update Assignment' : 'Create Assignment')}
+            {loading
+              ? editingId
+                ? 'Updating...'
+                : 'Creating...'
+              : editingId
+              ? 'Update Assignment'
+              : 'Create Assignment'}
           </button>
 
           {editingId && (
@@ -191,7 +185,10 @@ const Assignments = () => {
           setSearch(e.target.value);
           setPage(1);
         }}
-        className={`${theme === 'dark' ? 'bg-gray-700 text-gray-100 border-gray-600' : 'bg-white text-gray-900 border-gray-300'} w-full p-2 rounded mb-4 border`}
+        className={`${theme === 'dark'
+            ? 'bg-gray-700 text-gray-100 border-gray-600'
+            : 'bg-white text-gray-900 border-gray-300'
+          } w-full p-2 rounded mb-4 border`}
       />
 
       {/* ===== ASSIGNMENT LIST ===== */}
@@ -201,13 +198,7 @@ const Assignments = () => {
           className={`${theme === 'dark' ? 'bg-gray-800' : 'bg-white'} p-4 rounded mb-4 shadow`}
         >
           <h2 className="font-bold">{a.title}</h2>
-          <p className="text-sm text-gray-400">{a.assignment_date}</p>
           <div dangerouslySetInnerHTML={{ __html: a.description }} />
-          {a.volunteers?.length > 0 && (
-            <p className="text-sm text-gray-400">
-              Assigned to: {a.volunteers.map((v) => v.name).join(', ')}
-            </p>
-          )}
 
           <div className="flex gap-2 mt-2">
             <button
@@ -216,6 +207,7 @@ const Assignments = () => {
             >
               Edit
             </button>
+
             <button
               onClick={() => handleDelete(a.id)}
               className="bg-red-600 text-white px-3 py-1 rounded"

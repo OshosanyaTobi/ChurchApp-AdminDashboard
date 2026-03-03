@@ -8,10 +8,10 @@ const Login = () => {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [isVolunteer, setIsVolunteer] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // ✅ Redirect ONLY when token changes
   useEffect(() => {
     if (token) {
       navigate("/");
@@ -24,7 +24,11 @@ const Login = () => {
     setLoading(true);
 
     try {
-      await login({ email, password });
+      await login({
+        email,
+        password,
+        is_volunteer: isVolunteer,
+      });
     } catch (err) {
       setError(err.response?.data?.message || "Login failed");
     } finally {
@@ -35,7 +39,7 @@ const Login = () => {
   return (
     <div style={styles.container}>
       <form onSubmit={handleSubmit} style={styles.form}>
-        <h2>Admin Login</h2>
+        <h2>Login</h2>
 
         {error && <p style={styles.error}>{error}</p>}
 
@@ -56,6 +60,16 @@ const Login = () => {
           required
           style={styles.input}
         />
+
+        {/* Volunteer Checkbox */}
+        <label style={{ marginBottom: "15px", display: "block" }}>
+          <input
+            type="checkbox"
+            checked={isVolunteer}
+            onChange={(e) => setIsVolunteer(e.target.checked)}
+          />{" "}
+          I am a volunteer
+        </label>
 
         <button type="submit" style={styles.button} disabled={loading}>
           {loading ? "Logging in..." : "Login"}

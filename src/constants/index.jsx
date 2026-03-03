@@ -48,6 +48,11 @@ export const navbarLinks = [
                 path: "/assignments",
             },
             {
+                label: "Whatsapp",
+                icon: ChartColumn,
+                path: "/whatsapp-links",
+            },
+            {
                 label: "Schedules",
                 icon: ChartColumn,
                 path: "/schedules",
